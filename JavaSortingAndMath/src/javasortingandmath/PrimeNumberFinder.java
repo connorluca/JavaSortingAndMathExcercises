@@ -76,4 +76,24 @@ public class PrimeNumberFinder {
         //hits[maxFactors] hold the total number of prime factors the winner has
         return maxFactors+min;
     }
+    /**
+     * Finds all prime factors for a given number, we will call eratosthenesSieve to find all prime numbers less than the number to factor
+     * @param numberToFactor
+     * @return 
+     */
+    public ArrayList<Integer> findPrimeFactors(int numberToFactor){
+        ArrayList<Integer> primesUnder = eratosthenesSieve(numberToFactor);
+        ArrayList<Integer> primeFactor = new ArrayList<Integer>();
+        while(numberToFactor !=1){
+            for(int prime: primeFactor){
+                if(numberToFactor%prime==0){
+                    numberToFactor=numberToFactor/prime;
+                    primeFactor.add(prime);
+                    break;
+                }
+            }
+        }
+        
+        return null;
+    }
 }
