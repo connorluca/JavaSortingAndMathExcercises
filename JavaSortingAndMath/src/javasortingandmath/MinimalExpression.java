@@ -10,9 +10,17 @@ package javasortingandmath;
  * @author conno
  */
 public class MinimalExpression {
+
     public int varEx;
     public int complEx;
     public int varVal;
     public int conVal;
     public char variableCharacter;
+
+    public boolean checkFilled() {
+        if(varEx==0 || complEx==0||varVal==0||conVal==0||variableCharacter=='\u0000'){
+        return false;
+    }
+        return true;
+    }
 }

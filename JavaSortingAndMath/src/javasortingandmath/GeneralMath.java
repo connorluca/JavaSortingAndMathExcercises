@@ -49,6 +49,7 @@ public class GeneralMath {
      * @return
      */
     public int binomialCoefficient(String equation, int k) {
+
         return 0;
     }
 
@@ -60,7 +61,22 @@ public class GeneralMath {
      * @return
      */
     public String raiseMinimumExpressionToPower(String expression) {
-        return null;
+        MinimalExpression min = new MinimalExpression();
+        min = parseValues(expression);
+        StringBuilder strB = new StringBuilder();
+        int biCo = binomialCoefficient(min.complEx, 0, min.conVal, min.varVal);
+        strB.append(biCo);//removes if else statement if first is added before loop
+        for (int k = 1; k <= min.complEx; k++) {
+            biCo = binomialCoefficient(min.complEx, k, min.conVal, min.varVal);
+
+            strB.append(biCo < 0 ? '-' : '+');
+            strB.append(biCo);
+            strB.append(min.variableCharacter);
+            strB.append('^');
+            strB.append(min.varEx * k);
+        }
+
+        return strB.toString();
     }
 
     public int recursiveFactorial(int n) {
@@ -77,24 +93,30 @@ public class GeneralMath {
      * Parses the values for equations such as (x+4)^4 or (x^2+4)^4 or (x-4)^2
      * Negative exponents such as ^-4 are not accomodated for and will be turned
      * into positives in raiseMinimumExpression function which is calling this
-     * function.
-     * This function has minimum error checking if you put in an extra long expression such as (x+4+4)^8 you will get the same answer as (x+4)^8,
-     * as it will not simplyfy the expression, the result you will get for illigimate functions will vary becuase the loop will
-     * overright values for the constant and variable with the most rightmost instance of variable or constant inside the brackets.
+     * function. This function has minimum error checking if you put in an extra
+     * long expression such as (x+4+4)^8 you will get the same answer as
+     * (x+4)^8, as it will not simplyfy the expression, the result you will get
+     * for illigimate functions will vary becuase the loop will overright values
+     * for the constant and variable with the most rightmost instance of
+     * variable or constant inside the brackets.
+     *
      * @param expression
      * @return a string array containing the variable exponent, complete
-     * equation exponent, variable value and constant value in that order
-     * (would be nice to have this as object instead of strings that have to be cast to the proper type for processing later)
+     * equation exponent, variable value and constant value in that order (would
+     * be nice to have this as object instead of strings that have to be cast to
+     * the proper type for processing later)
      */
-    public String[] parseValues(String expression) {
-        String varEx ="", complEx="", varVal="", conVal ="";
+    public MinimalExpression parseValues(String expression) {
+        MinimalExpression min = new MinimalExpression();
         int currentPosition = 0;//used to pass through the string as we find each value         
         try {
             if (expression.charAt(currentPosition) != '(') {
                 throw new InvalidExpressionException("Invalid expression");
+
             }
         } catch (InvalidExpressionException ex) {
-            Logger.getLogger(GeneralMath.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GeneralMath.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         currentPosition++;
         StringBuilder genExp = new StringBuilder();
@@ -103,41 +125,62 @@ public class GeneralMath {
 
         while (expression.charAt(currentPosition) != ')') {
             //not sure if regex can be used for this becuase of ^ character
-            if (expression.charAt(currentPosition) == '-' || expression.charAt(currentPosition) == '+' || expression.charAt(currentPosition+1) == ')' ){
-                if(expression.charAt(currentPosition+1) == ')'){
+            if (expression.charAt(currentPosition) == '-' || expression.charAt(currentPosition) == '+' || expression.charAt(currentPosition + 1) == ')') {
+                if (expression.charAt(currentPosition + 1) == ')') {
                     genExp.append(expression.charAt(currentPosition));
                 }
                 if (genExp.indexOf("^") != -1) {//true if it contains ^
                     String[] temp = genExp.toString().split("^");
                     if (temp[0].matches(".*[a-zA-Z]+.*")) {
-                        varVal = temp[0];
-                        varEx=temp[1];
+                        min.varVal = Integer.parseInt(temp[0]);
+                        min.varEx = Integer.parseInt(temp[1]);
+                        min.variableCharacter = findFirstLetterCharacter(temp[0]);
                     } else {
                         //a constant has had an exponent applied to it so  we will simplify before assigning
-                        conVal= String.valueOf((int)Math.pow(Double.parseDouble(temp[0]), Double.parseDouble(temp[1])));
+                        min.conVal = (int) Math.pow(Double.parseDouble(temp[0]), Double.parseDouble(temp[1]));
                     }
                 } else {
                     if (genExp.toString().matches(".*[a-zA-Z]+.*")) {
-                        varVal= genExp.toString();
-                        varEx="1";
+                        min.varVal = Integer.parseInt(genExp.toString());
+                        min.varEx = 1;
+                        min.variableCharacter = findFirstLetterCharacter(genExp.toString());
                     } else {
-                        conVal = genExp.toString();
+                        min.conVal = Integer.parseInt(genExp.toString());
                     }
                 }
-                genExp.setLength(0);
+                genExp.setLength(0);//clear the string 
             }
             genExp.append(expression.charAt(currentPosition));
             currentPosition++;
         }
         try {
-            if (varEx.isEmpty() || varVal.isEmpty() || conVal.isEmpty()) {
+            if (min.checkFilled()) {
                 throw new InvalidExpressionException("Missing vvariable or constant");
+
             }
         } catch (InvalidExpressionException ex) {
-            Logger.getLogger(GeneralMath.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GeneralMath.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
-        complEx = expression.substring(currentPosition+2);//current position is currently at ) so it should be +2 to pass the ^ and reach the numbers
-        String[] values = {complEx, varVal, conVal, varEx};
-        return values;
+        min.complEx = Integer.parseInt(expression.substring(currentPosition + 2));//current position is currently at ) so it should be +2 to pass the ^ and reach the numbers
+
+        return min;
+    }
+
+    /**
+     * Returns the first instance of a letter character.
+     *
+     * @param string
+     * @return
+     */
+    public char findFirstLetterCharacter(String string) {
+
+        for (int i = 0; i < string.length(); i++) {
+            if (Character.toString(string.charAt(i)).matches("[a-zA-Z]")) {
+                return string.charAt(i);
+            }
+        }
+        return 'x';//default char if none are found
+
     }
 }
